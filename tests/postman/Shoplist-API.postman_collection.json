@@ -18,8 +18,8 @@
 								"exec": [
 									"pm.test(\"200 OK token\", () => pm.response.to.have.status(200));",
 									"",
-									"const data = pm.response.json();",
-									"const token = data.access_token;",
+									"const dataToken = pm.response.json();",
+									"const token = dataToken.access_token;",
 									"",
 									"pm.expect(token, \"Pas d'access_token dans la réponse Cognito\").to.exist;",
 									"",
@@ -91,11 +91,11 @@
 									"  pm.response.to.have.status(201);",
 									"});",
 									"",
-									"const data = pm.response.json();",
-									"pm.expect(data).to.have.property(\"_id\");",
+									"const itemCreated = pm.response.json();",
+									"pm.expect(itemCreated).to.have.property(\"_id\");",
 									"",
 									"// Sauvegarde itemId pour les étapes suivantes",
-									"pm.environment.set(\"itemId\", data._id || data._id);"
+									"pm.environment.set(\"itemId\", itemCreated._id || itemCreated._id);"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -338,6 +338,28 @@
 						}
 					},
 					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
 				}
 			]
 		},
