@@ -7,10 +7,19 @@ phases:
     commands:
       - echo "Installing dependencies..."
       - npm install
+
+  pre_build:
+    commands:
+      - echo "Running unit tests..."
+      - npm run test:unit
+      - echo "Running integration tests..."
+      - npm run test:integration
+
   build:
     commands:
       - echo "Running build script..."
       - npm run build
+
   post_build:
     commands:
       - echo "Updating Lambda function code..."
