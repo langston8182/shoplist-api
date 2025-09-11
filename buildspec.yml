@@ -5,8 +5,8 @@ phases:
     runtime-versions:
       nodejs: 22
     commands:
-      - echo "Installing dependencies..."
-      - npm install
+      - echo "Installing dependencies (all) for tests..."
+      - npm ci
 
   pre_build:
     commands:
@@ -17,20 +17,23 @@ phases:
 
   build:
     commands:
-      - echo "Running build script..."
-      - npm run build
+      - echo "Preparing production package (omit devDependencies)..."
+      # Reinstall only production deps to shrink the artifact
+      - rm -rf node_modules
+      - npm ci --omit=dev
+      - echo "Creating deployment zip (src + package.json + node_modules)..."
+      # Adjust the list below if your handler files are not under src/
+      - zip -r build.zip src package.json package-lock.json node_modules -x "tests/*" "*.map" ".git/*" ".github/*"
 
   post_build:
     commands:
-      - echo "Updating Lambda function code..."
+      - echo "Updating Lambda function code with zipped artifact..."
       - |
         FUNCTION_NAME=${FUNCTION_NAME}
         REGION=${REGION}
-        
-        # Mise à jour du code de la Lambda
         aws lambda update-function-code \
-          --function-name $FUNCTION_NAME \
-          --region $REGION \
+          --function-name "$FUNCTION_NAME" \
+          --region "$REGION" \
           --zip-file fileb://build.zip
 
 artifacts:
