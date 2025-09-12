@@ -30,22 +30,15 @@ phases:
   build:
     commands:
       - echo "Preparing production package (omit devDependencies)..."
+      - npm prune --omit=dev
       - rm -rf node_modules
-      - npm ci --omit=dev --no-audit --no-fund
       - echo "Creating deployment zip (src + package.json + node_modules)..."
       - zip -r build.zip src package.json package-lock.json node_modules -x "tests/*" "*.map" ".git/*" ".github/*"
 
-  post_build:
-    commands:
-      - echo "Updating Lambda function code with zipped artifact..."
-      - |
-        FUNCTION_NAME=${FUNCTION_NAME}
-        REGION=${REGION}
-        aws lambda update-function-code \
-          --function-name "$FUNCTION_NAME" \
-          --region "$REGION" \
-          --zip-file fileb://build.zip
-
+cache:
+  paths:
+    - '/root/.npm/**/*'
+    -
 artifacts:
   files:
     - build.zip
