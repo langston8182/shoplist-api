@@ -1,0 +1,39 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - node -v && npm -v
+      - npm ci
+  pre_build:
+    commands:
+      # (Optionnel) Tests - commente si tu veux aller plus vite
+      - echo "==> Running tests"
+      - npm test || { echo "Tests failed"; exit 1; }
+  build:
+    commands:
+      - echo "==> npm run build (produit build.zip)"
+      - npm run build
+
+      - echo "==> Prépare dist/ et renomme build.zip -> dist/shoplist-api.zip"
+      - mkdir -p dist
+      - mv -f build.zip dist/shoplist-api.zip
+
+      - echo "==> SAM build"
+      - sam build --use-container
+
+      - |
+        if [ -z "$ARTIFACTS_BUCKET" ]; then
+          echo "ERROR: ARTIFACTS_BUCKET is empty. Set it in the CodeBuild project environment variables."; exit 1;
+        fi
+
+      - echo "==> SAM package vers S3: $ARTIFACTS_BUCKET"
+      - sam package \
+        --template-file .aws-sam/build/template.yaml \
+        --s3-bucket "$ARTIFACTS_BUCKET" \
+        --output-template-file packaged.yaml
+artifacts:
+  files:
+    - packaged.yaml
+    - samconfig.toml
