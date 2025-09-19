@@ -1,0 +1,16 @@
+{
+  "version": "2.0",
+  "routeKey": "POST /items",
+  "rawPath": "/items",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/items"
+    }
+  },
+  "body": "{\"name\":\"Tomates\",\"quantity\":\"2\",\"unit\":\"kg\"}",
+  "isBase64Encoded": false
+}

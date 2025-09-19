@@ -1,0 +1,15 @@
+{
+  "version": "2.0",
+  "routeKey": "GET /items",
+  "rawPath": "/items",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {
+    "http": {
+      "method": "GET",
+      "path": "/items"
+    }
+  }
+}

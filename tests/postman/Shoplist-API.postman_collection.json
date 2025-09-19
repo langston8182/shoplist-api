@@ -1,0 +1,566 @@
+{
+	"info": {
+		"_postman_id": "9fdb1a6e-ba3b-4230-b27a-fa2effa19ea3",
+		"name": "Shoplist API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1312280"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Get M2M token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"200 OK token\", () => pm.response.to.have.status(200));",
+									"",
+									"const dataToken = pm.response.json();",
+									"const token = dataToken.access_token;",
+									"",
+									"pm.expect(token, \"Pas d'access_token dans la réponse Cognito\").to.exist;",
+									"",
+									"// Sauvegarde pour les requêtes suivantes",
+									"pm.environment.set(\"access_token\", token);",
+									"",
+									"// (Optionnel) debug",
+									"console.log(\"M2M access_token reçu (tronqué):\", token?.slice(0, 20), \"...\");"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "{{clientId}}",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{clientSecret}}",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "{{scope}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{cognito_domain}}/oauth2/token",
+							"host": [
+								"{{cognito_domain}}"
+							],
+							"path": [
+								"oauth2",
+								"token"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Happy path",
+			"item": [
+				{
+					"name": "Create item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"201 Created\", function () {",
+									"  pm.response.to.have.status(201);",
+									"});",
+									"",
+									"const itemCreated = pm.response.json();",
+									"pm.expect(itemCreated).to.have.property(\"_id\");",
+									"",
+									"// Sauvegarde itemId pour les étapes suivantes",
+									"pm.environment.set(\"itemId\", itemCreated._id || itemCreated._id);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Lait\",\n  \"quantity\": 2,\n  \"unit\": \"bouteilles\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/items",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get items",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"200 OK\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const list = pm.response.json().items || [];",
+									"pm.expect(Array.isArray(list)).to.be.true;",
+									"",
+									"const id = pm.environment.get(\"itemId\");",
+									"const item = list.find(x => x._id === id);",
+									"pm.test(\"Item créé présent dans la liste\", function () {",
+									"  pm.expect(item).to.have.property(\"name\", \"Lait\");",
+									"  pm.expect(item).to.have.property(\"quantity\", 2);",
+									"  pm.expect(item).to.have.property(\"unit\", \"bouteilles\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/items",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 200 OK\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 3\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/items/{{itemId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"items",
+								"{{itemId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get item after update",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"200 OK\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const body = pm.response.json();",
+									"const list = body.items || [];",
+									"",
+									"pm.test(\"La réponse contient un tableau items\", function () {",
+									"  pm.expect(Array.isArray(list)).to.be.true;",
+									"});",
+									"",
+									"// Vérifie que la liste a exactement 1 élément",
+									"pm.test(\"Il n'y a qu'un seul élément dans la liste\", function () {",
+									"  pm.expect(list.length).to.eql(1);",
+									"});",
+									"",
+									"const id = pm.environment.get(\"itemId\");",
+									"const item = list.find(x => x._id === id);",
+									"",
+									"pm.test(\"Item créé présent dans la liste\", function () {",
+									"  pm.expect(item).to.exist;",
+									"});",
+									"",
+									"// Vérifie que la quantité de cet item est bien 3",
+									"pm.test(\"Quantité = 3\", function () {",
+									"  pm.expect(item.quantity).to.eql(3);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/items",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"204 No Content\", function () {",
+									"  pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/items/{{itemId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"items",
+								"{{itemId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get item after delete",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"200 OK\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const body = pm.response.json();",
+									"const list = body.items || [];",
+									"",
+									"pm.test(\"La réponse contient un tableau items\", function () {",
+									"  pm.expect(Array.isArray(list)).to.be.true;",
+									"});",
+									"",
+									"// Vérifie que la liste est vide",
+									"pm.test(\"Il n'y a aucun élément dans la liste\", function () {",
+									"  pm.expect(list.length).to.eql(0);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/items",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"items"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Edge cases",
+			"item": [
+				{
+					"name": "Validation",
+					"item": []
+				},
+				{
+					"name": "Path parameters",
+					"item": [
+						{
+							"name": "Patch Item with non-existing id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"500 Internal error\", () => pm.response.to.have.status(500));"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"quantity\": 3\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/items/xxx",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"items",
+										"xxx"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Item with non-existing id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"500 Internal error\", () => pm.response.to.have.status(500));"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"quantity\": 3\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/items/xxx",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"items",
+										"xxx"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Auth",
+					"item": [
+						{
+							"name": "Get Items without cookie",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"pm.request.headers.remove(\"Cookie\");"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"401 Unauthorized\", () => pm.response.to.have.status(401));"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/items",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"items"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Items with invalid token",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"pm.request.headers.upsert({ key: \"Cookie\", value: \"access_token=badtoken\" });"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"401 Unauthorized\", () => pm.response.to.have.status(403));"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/items",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"items"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"const t = pm.environment.get(\"access_token\");",
+					"pm.request.headers.upsert({ key: \"Cookie\", value: `access_token=${t}` });",
+					"console.log(\"Injected Cookie header for this request\");"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

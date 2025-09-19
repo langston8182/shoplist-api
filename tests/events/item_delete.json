@@ -1,0 +1,14 @@
+{
+  "version": "2.0",
+  "routeKey": "DELETE /items/{itemId}",
+  "rawPath": "/items/68c148de03dadab74271d3f6",
+  "requestContext": {
+    "http": {
+      "method": "DELETE",
+      "path": "/items/68c148de03dadab74271d3f6"
+    }
+  },
+  "pathParameters": {
+    "itemId": "68c148de03dadab74271d3f6"
+  }
+}
