@@ -43,8 +43,7 @@ export async function patchItem(listId, itemId, patch) {
         { $set: set },
         { returnDocument: "after" }
     );
-    if (res.value) await updateListTimestamp(listId);
-    return res.value;
+    return res;
 }
 
 export async function removeItem(listId, itemId) {

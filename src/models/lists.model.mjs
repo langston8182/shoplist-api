@@ -19,7 +19,7 @@ export async function getListById(id) {
 
 export async function listLists() {
     const db = await getDb();
-    return db.collection(COL).find(q).project({}).sort({ createdAt: -1 }).toArray();
+    return db.collection(COL).find().project({}).sort({ createdAt: -1 }).toArray();
 }
 
 export async function updateListTimestamp(id) {
