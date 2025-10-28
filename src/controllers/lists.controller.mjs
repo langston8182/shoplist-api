@@ -1,5 +1,5 @@
 import { ok, created, notFound, badRequest, serverError, parseJsonBody } from "../utils/http.mjs";
-import { createNewList, getLists, getListWithItems } from "../services/lists.service.mjs";
+import { createNewList, getLists, getListWithItems, removeList } from "../services/lists.service.mjs";
 import { listItems } from "../services/items.service.mjs";
 
 export async function handleLists(event) {
@@ -22,6 +22,10 @@ export async function handleLists(event) {
         if (method === "GET" && seg.length === 2) {
             const r = await getListWithItems(seg[1]);
             return r ? ok(r) : notFound("List not found");
+        }
+        if (method === "DELETE" && seg.length === 2) {
+            const deleted = await removeList(seg[1]);
+            return deleted ? ok({ message: "List deleted successfully" }) : notFound("List not found");
         }
 
         // Optional: /lists/{listId}/items to fetch only items with pagination

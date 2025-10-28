@@ -51,3 +51,25 @@ test("create/list/get lists (model)", async () => {
   const updated = await listsModel.getListById(String(created._id));
   expect(new Date(updated.updatedAt).getTime()).toBeGreaterThan(new Date(created.updatedAt).getTime());
 });
+
+test("delete list (model)", async () => {
+  const created = await listsModel.createList({ name: "Liste à supprimer" });
+  expect(created._id).toBeDefined();
+  
+  const allBefore = await listsModel.listLists();
+  expect(allBefore.length).toBe(1);
+  
+  const deleted = await listsModel.deleteList(String(created._id));
+  expect(deleted).toBe(true);
+  
+  const allAfter = await listsModel.listLists();
+  expect(allAfter.length).toBe(0);
+  
+  const notFound = await listsModel.getListById(String(created._id));
+  expect(notFound).toBe(null);
+});
+
+test("delete non-existent list returns false", async () => {
+  const deleted = await listsModel.deleteList("507f1f77bcf86cd799439011");
+  expect(deleted).toBe(false);
+});

@@ -1,4 +1,4 @@
-import { createList, listLists, getListById } from "../models/lists.model.mjs";
+import { createList, listLists, getListById, deleteList } from "../models/lists.model.mjs";
 import { listItemsByListId } from "../models/items.model.mjs";
 
 export async function createNewList({ name }) { return createList({ name }); }
@@ -10,4 +10,8 @@ export async function getListWithItems(id) {
     if (!list) return null;
     const items = await listItemsByListId(id);
     return { ...list, items };
+}
+
+export async function removeList(id) {
+    return deleteList(id);
 }

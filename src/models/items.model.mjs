@@ -49,6 +49,5 @@ export async function patchItem(listId, itemId, patch) {
 export async function removeItem(listId, itemId) {
     const db = await getDb();
     const res = await db.collection(COL).findOneAndDelete({ _id: new ObjectId(itemId), listId: new ObjectId(listId) });
-    if (res.value) await updateListTimestamp(listId);
-    return res.value;
+    return res;
 }

@@ -26,3 +26,9 @@ export async function updateListTimestamp(id) {
     const db = await getDb();
     await db.collection(COL).updateOne({ _id: new ObjectId(id) }, { $set: { updatedAt: new Date() } });
 }
+
+export async function deleteList(id) {
+    const db = await getDb();
+    const result = await db.collection(COL).deleteOne({ _id: new ObjectId(id) });
+    return result.deletedCount > 0;
+}
