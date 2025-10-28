@@ -1,0 +1,21 @@
+{
+  "version": "2.0",
+  "routeKey": "PATCH /lists/{listId}/items/{itemId}",
+  "rawPath": "/lists/68c148de03dadab74271d3f6/items/507f1f77bcf86cd799439011",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {
+    "http": {
+      "method": "PATCH",
+      "path": "/lists/68c148de03dadab74271d3f6/items/507f1f77bcf86cd799439011"
+    }
+  },
+  "pathParameters": {
+    "listId": "68c148de03dadab74271d3f6",
+    "itemId": "507f1f77bcf86cd799439011"
+  },
+  "body": "{\"weight\": {\"value\": 500, \"unit\": \"g\"}}",
+  "isBase64Encoded": false
+}

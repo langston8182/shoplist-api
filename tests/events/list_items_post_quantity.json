@@ -1,0 +1,20 @@
+{
+  "version": "2.0",
+  "routeKey": "POST /lists/{listId}/items",
+  "rawPath": "/lists/68c148de03dadab74271d3f6/items",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/lists/68c148de03dadab74271d3f6/items"
+    }
+  },
+  "pathParameters": {
+    "listId": "68c148de03dadab74271d3f6"
+  },
+  "body": "{\"name\": \"P\\u00e2tes\", \"quantity\": 3}",
+  "isBase64Encoded": false
+}

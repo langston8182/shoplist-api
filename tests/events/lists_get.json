@@ -1,0 +1,17 @@
+{
+  "version": "2.0",
+  "routeKey": "GET /lists",
+  "rawPath": "/lists",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {
+    "http": {
+      "method": "GET",
+      "path": "/lists"
+    }
+  },
+  "pathParameters": {},
+  "isBase64Encoded": false
+}

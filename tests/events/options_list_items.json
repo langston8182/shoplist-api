@@ -1,0 +1,19 @@
+{
+  "version": "2.0",
+  "routeKey": "OPTIONS /lists/{listId}/items",
+  "rawPath": "/lists/68c148de03dadab74271d3f6/items",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {
+    "http": {
+      "method": "OPTIONS",
+      "path": "/lists/68c148de03dadab74271d3f6/items"
+    }
+  },
+  "pathParameters": {
+    "listId": "68c148de03dadab74271d3f6"
+  },
+  "isBase64Encoded": false
+}

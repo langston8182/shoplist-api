@@ -1,0 +1,18 @@
+{
+  "version": "2.0",
+  "routeKey": "POST /lists",
+  "rawPath": "/lists",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/lists"
+    }
+  },
+  "pathParameters": {},
+  "body": "{\"name\": \"Courses Leclerc\"}",
+  "isBase64Encoded": false
+}

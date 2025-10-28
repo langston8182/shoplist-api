@@ -1,0 +1,19 @@
+{
+  "version": "2.0",
+  "routeKey": "GET /lists/{listId}",
+  "rawPath": "/lists/68c148de03dadab74271d3f6",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {
+    "http": {
+      "method": "GET",
+      "path": "/lists/68c148de03dadab74271d3f6"
+    }
+  },
+  "pathParameters": {
+    "listId": "68c148de03dadab74271d3f6"
+  },
+  "isBase64Encoded": false
+}

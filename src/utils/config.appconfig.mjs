@@ -1,6 +1,10 @@
 // npm i js-yaml
 import yaml from "js-yaml";
-import {MongoMemoryServer} from "mongodb-memory-server";
+import {
+    AppConfigDataClient,
+    StartConfigurationSessionCommand,
+    GetLatestConfigurationCommand,
+} from "@aws-sdk/client-appconfigdata";
 
 const client = new AppConfigDataClient({});
 // Cache par profil (évite de rappeler AppConfig à chaque invocation)
