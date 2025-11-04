@@ -22,7 +22,7 @@ function normalizeWithoutAccents(str) {
  */
 export async function addOrUpdateArticle(name) {
     const db = await getDb();
-    const normalizedName = normalizeWithoutAccents(name);
+    const normalizedName = name.toLowerCase().trim();
     
     if (!normalizedName) return null;
     
@@ -79,51 +79,44 @@ export async function searchArticles(query, opts = {}) {
     
     if (!normalizedQuery) return [];
     
-    // Recherche simple : commence par ou contient le terme
-    const pipeline = [
-        {
-            $match: {
-                normalizedName: { $regex: normalizedQuery, $options: 'i' }
-            }
-        },
-        {
-            $addFields: {
-                // Score : priorité aux noms qui commencent par le terme recherché
-                startsWithQuery: {
-                    $cond: [
-                        { $eq: [{ $indexOfCP: ["$normalizedName", normalizedQuery] }, 0] },
-                        1,
-                        0
-                    ]
-                }
-            }
-        },
-        {
-            $addFields: {
-                score: {
-                    $add: [
-                        { $multiply: ["$startsWithQuery", 100] }, // Bonus si commence par
-                        "$usageCount" // Popularité
-                    ]
-                }
-            }
-        },
-        { $sort: { score: -1, usageCount: -1, name: 1 } },
-        {
-            $project: {
-                name: 1,
-                usageCount: 1,
-                createdAt: 1,
-                updatedAt: 1,
-                score: 1
-            }
-        }
-    ];
+    // Recherche avec normalisation côté application : on récupère tous les articles
+    // et on filtre en JavaScript pour comparer sans accents
+    const allArticles = await db.collection(COL).find({}).toArray();
     
-    if (opts.limit) pipeline.push({ $limit: opts.limit });
-    if (opts.skip) pipeline.push({ $skip: opts.skip });
+    // Filtrer les articles dont le normalizedName sans accents contient la query
+    const filtered = allArticles.filter(article => {
+        const normalizedArticleName = normalizeWithoutAccents(article.normalizedName);
+        return normalizedArticleName.includes(normalizedQuery);
+    });
     
-    return db.collection(COL).aggregate(pipeline).toArray();
+    // Calculer le score et trier
+    const scored = filtered.map(article => {
+        const normalizedArticleName = normalizeWithoutAccents(article.normalizedName);
+        const startsWithQuery = normalizedArticleName.startsWith(normalizedQuery) ? 1 : 0;
+        const score = (startsWithQuery * 100) + article.usageCount;
+        
+        return {
+            _id: article._id,
+            name: article.name,
+            usageCount: article.usageCount,
+            createdAt: article.createdAt,
+            updatedAt: article.updatedAt,
+            score
+        };
+    });
+    
+    // Trier par score décroissant, puis par usageCount, puis par nom
+    scored.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (b.usageCount !== a.usageCount) return b.usageCount - a.usageCount;
+        return a.name.localeCompare(b.name);
+    });
+    
+    // Appliquer la pagination
+    const start = opts.skip || 0;
+    const end = opts.limit ? start + opts.limit : scored.length;
+    
+    return scored.slice(start, end);
 }
 
 /**
