@@ -37,6 +37,18 @@ Resources:
       FunctionName: !Ref FunctionName
       CodeUri: ./
       Handler: src/index.handler
+      AutoPublishAlias: Live
+      DeploymentPreference:
+        Type: !Ref DeployPrefType              # AllAtOnce en preprod, Canary en prod
+        Alarms: []                             # ajoute ici les noms d'alarmes CloudWatch
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action:
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource: "*"
 
 Outputs:
   FunctionArn:
