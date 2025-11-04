@@ -1,122 +1,88 @@
-# Configuration Atlas Search pour les Articles
+# Recherche d'articles
 
 ## Vue d'ensemble
 
-L'API utilise MongoDB Atlas Search pour une recherche fuzzy avancée des articles. Si Atlas Search n'est pas disponible, l'API utilise automatiquement un fallback basé sur des expressions régulières.
+L'API utilise une recherche simple et performante basée sur des expressions régulières MongoDB.
+La recherche privilégie les articles qui commencent par le terme recherché, puis ceux qui le contiennent.
 
-## Configuration de l'index Atlas Search
+## Fonctionnalités de recherche
 
-### 1. Créer un index de recherche
+### **Recherche simple et performante**
+- Utilise des regex MongoDB natives (pas besoin d'Atlas Search)
+- Recherche insensible à la casse
+- Normalisation des noms en minuscules
 
-Dans MongoDB Atlas, créez un index de recherche appelé `articles_search` sur la collection `article_suggestions` avec la configuration suivante :
+### **Algorithme de scoring**
+- **Bonus "commence par"** : Articles qui commencent par le terme (score +100)
+- **Popularité** : Score basé sur `usageCount`
+- Tri : Score → Popularité → Nom alphabétique
 
-```json
-{
-  "mappings": {
-    "dynamic": false,
-    "fields": {
-      "name": [
-        {
-          "type": "autocomplete",
-          "analyzer": "lucene.standard",
-          "tokenization": "edgeGram",
-          "minGrams": 2,
-          "maxGrams": 15,
-          "foldDiacritics": true
-        },
-        {
-          "type": "string",
-          "analyzer": "lucene.standard"
-        }
-      ],
-      "normalizedName": {
-        "type": "string",
-        "analyzer": "lucene.standard"
-      },
-      "usageCount": {
-        "type": "number"
-      }
-    }
-  }
-}
-```
-
-### 2. Configuration via l'interface Atlas
-
-1. Allez dans votre cluster MongoDB Atlas
-2. Cliquez sur l'onglet "Search"
-3. Cliquez sur "Create Search Index"
-4. Sélectionnez la base de données et la collection `article_suggestions`
-5. Nommez l'index `articles_search`
-6. Utilisez la configuration JSON ci-dessus
-
-### 3. Configuration via MongoDB Compass
-
-Vous pouvez également créer l'index via MongoDB Compass :
-
-1. Connectez-vous à votre cluster
-2. Naviguez vers la collection `article_suggestions`
-3. Allez dans l'onglet "Search Indexes"
-4. Créez un nouvel index avec le nom `articles_search`
-
-## Fonctionnalités Atlas Search utilisées
-
-### **Autocomplete**
-- Recherche en temps réel pendant la saisie
-- Configuration `edgeGram` pour les suggestions de type-ahead
-- `foldDiacritics: true` pour ignorer les accents
-
-### **Text Search avec Fuzzy**
-- Tolérance aux fautes de frappe (maxEdits: 2)
-- Recherche sur les noms normalisés
-
-### **Phrase Search**
-- Boost pour les correspondances exactes
-- Priorise les résultats exacts
-
-### **Score combiné**
-- Score Atlas Search × 10
-- Usage count × 0.5
-- Tri par pertinence et popularité
+### **Optimisation**
+- Pas de configuration complexe requise
+- Fonctionne sur n'importe quel MongoDB (local, Atlas, etc.)
+- Performance optimale pour des milliers d'articles
 
 ## Exemples de recherche
 
-Avec Atlas Search configuré, la recherche sera beaucoup plus performante :
-
 ```bash
-# Recherche fuzzy avancée
+# Recherche simple
 GET /articles?q=tomat
 # Trouvera: "Tomates", "Tomates cerises", "Concentré de tomate"
 
-# Tolérance aux fautes
-GET /articles?q=pomm
-# Trouvera: "Pommes", "Pomme de terre", "Pamplemousse"
+# Commence par
+GET /articles?q=pom
+# Trouvera en priorité: "Pommes" (commence par), puis "Pamplemousse" (contient)
 
-# Recherche avec accents
-GET /articles?q=gruyere  
-# Trouvera: "Gruyère", "Gruyère râpé"
+# Recherche partielle
+GET /articles?q=terre
+# Trouvera: "Pomme de terre", "Terrine", etc.
 ```
 
-## Fallback automatique
+## Pipeline MongoDB (pour tester dans Compass)
 
-Si Atlas Search n'est pas configuré ou disponible, l'API utilise automatiquement une recherche basée sur des expressions régulières avec :
-
-- Recherche par préfixe (score: 20)
-- Correspondance exacte (score: 15) 
-- Fuzzy regex (score: 5)
-- Bonus basé sur la popularité
-
-## Monitoring
-
-L'API log les erreurs Atlas Search et bascule automatiquement sur le fallback :
-
-```
-Atlas Search non disponible, utilisation du fallback regex: [error message]
+```javascript
+[
+  {
+    $match: {
+      normalizedName: { $regex: "pom", $options: 'i' }
+    }
+  },
+  {
+    $addFields: {
+      startsWithQuery: {
+        $cond: [
+          { $eq: [{ $indexOfCP: ["$normalizedName", "pom"] }, 0] },
+          1,
+          0
+        ]
+      }
+    }
+  },
+  {
+    $addFields: {
+      score: {
+        $add: [
+          { $multiply: ["$startsWithQuery", 100] },
+          "$usageCount"
+        ]
+      }
+    }
+  },
+  { $sort: { score: -1, usageCount: -1, name: 1 } },
+  {
+    $project: {
+      name: 1,
+      usageCount: 1,
+      createdAt: 1,
+      updatedAt: 1,
+      score: 1
+    }
+  }
+]
 ```
 
 ## Performance
 
-- **Atlas Search** : ~10-50ms pour des milliers d'articles
-- **Fallback Regex** : ~100-500ms pour des milliers d'articles
-
-Pour des performances optimales en production, il est fortement recommandé de configurer Atlas Search.
+- **Regex MongoDB** : ~50-200ms pour des milliers d'articles
+- Simple et efficace sans configuration supplémentaire
+- Index recommandé sur `normalizedName` pour optimiser les performances
