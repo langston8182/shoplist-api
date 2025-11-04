@@ -1,5 +1,6 @@
 import { handleLists } from "./controllers/lists.controller.mjs";
 import { handleItems } from "./controllers/items.controller.mjs";
+import { handleArticles } from "./controllers/articles.controller.mjs";
 import { ok, notFound } from "./utils/http.mjs";
 
 function seg(event) {
@@ -17,5 +18,10 @@ export const handler = async (event) => {
         if (s[2] === "items") return handleItems(event);
         return handleLists(event);
     }
+    
+    if (s[0] === "articles") {
+        return handleArticles(event);
+    }
+    
     return notFound("Route not found");
 };

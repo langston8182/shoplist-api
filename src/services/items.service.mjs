@@ -1,4 +1,5 @@
 import { addItemToList, listItemsByListId, patchItem, removeItem } from "../models/items.model.mjs";
+import { addOrUpdateArticle } from "../models/articles.model.mjs";
 
 export async function listItems(listId, opts) { return listItemsByListId(listId, opts); }
 
@@ -8,6 +9,15 @@ export async function addItem(listId, payload) {
     const hasQuantity = payload.quantity != null;
     const hasWeight = payload.weight != null;
     if (hasQuantity && hasWeight) throw new Error("Provide either quantity or weight, not both");
+    
+    // Ajouter l'article à la collection des suggestions
+    try {
+        await addOrUpdateArticle(name);
+    } catch (error) {
+        console.error("Erreur lors de l'ajout de l'article aux suggestions:", error);
+        // Ne pas faire échouer l'ajout de l'item si l'enregistrement de l'article échoue
+    }
+    
     return addItemToList(listId, payload);
 }
 

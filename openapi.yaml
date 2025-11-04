@@ -1,0 +1,888 @@
+openapi: 3.1.0
+info:
+  title: Shoplist API
+  description: API pour gérer des listes de courses avec des articles
+  version: 1.0.0
+  contact:
+    name: Shoplist API Support
+    email: support@shoplist.com
+
+servers:
+  - url: https://api.shoplist.com
+    description: Production server
+  - url: https://preprod-api.shoplist.com
+    description: Preprod server
+
+paths:
+  /lists:
+    get:
+      summary: Obtenir toutes les listes de courses
+      tags:
+        - Lists
+      responses:
+        '200':
+          description: Liste des listes de courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/List'
+              example:
+                - _id: "507f1f77bcf86cd799439011"
+                  name: "Courses Leclerc"
+                  createdAt: "2025-10-29T10:00:00.000Z"
+                  updatedAt: "2025-10-29T10:00:00.000Z"
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Créer une nouvelle liste de courses
+      tags:
+        - Lists
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateListRequest'
+            example:
+              name: "Courses Leclerc"
+      responses:
+        '201':
+          description: Liste créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/List'
+              example:
+                _id: "507f1f77bcf86cd799439011"
+                name: "Courses Leclerc"
+                createdAt: "2025-10-29T10:00:00.000Z"
+                updatedAt: "2025-10-29T10:00:00.000Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    options:
+      summary: Options CORS pour les listes
+      tags:
+        - CORS
+      responses:
+        '200':
+          description: Options CORS
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /lists/{listId}:
+    get:
+      summary: Obtenir une liste avec tous ses articles
+      tags:
+        - Lists
+      parameters:
+        - $ref: '#/components/parameters/ListId'
+      responses:
+        '200':
+          description: Liste avec ses articles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListWithItems'
+              example:
+                _id: "507f1f77bcf86cd799439011"
+                name: "Courses Leclerc"
+                createdAt: "2025-10-29T10:00:00.000Z"
+                updatedAt: "2025-10-29T10:00:00.000Z"
+                items:
+                  - _id: "507f1f77bcf86cd799439012"
+                    listId: "507f1f77bcf86cd799439011"
+                    name: "Pâtes"
+                    quantity: 3
+                    weight: null
+                    notes: null
+                    purchased: false
+                    createdAt: "2025-10-29T10:05:00.000Z"
+                    updatedAt: "2025-10-29T10:05:00.000Z"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      summary: Supprimer une liste de courses
+      tags:
+        - Lists
+      parameters:
+        - $ref: '#/components/parameters/ListId'
+      responses:
+        '200':
+          description: Liste supprimée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+              example:
+                message: "List deleted successfully"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /lists/{listId}/items:
+    get:
+      summary: Obtenir les articles d'une liste avec pagination
+      tags:
+        - Items
+      parameters:
+        - $ref: '#/components/parameters/ListId'
+        - name: limit
+          in: query
+          description: Nombre maximum d'articles à retourner
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: skip
+          in: query
+          description: Nombre d'articles à ignorer (offset)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Liste des articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+              example:
+                - _id: "507f1f77bcf86cd799439012"
+                  listId: "507f1f77bcf86cd799439011"
+                  name: "Pâtes"
+                  quantity: 3
+                  weight: null
+                  notes: null
+                  purchased: false
+                  createdAt: "2025-10-29T10:05:00.000Z"
+                  updatedAt: "2025-10-29T10:05:00.000Z"
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Ajouter un article à une liste
+      tags:
+        - Items
+      parameters:
+        - $ref: '#/components/parameters/ListId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateItemRequest'
+            examples:
+              withQuantity:
+                summary: Article avec quantité
+                value:
+                  name: "Pâtes"
+                  quantity: 3
+              withWeight:
+                summary: Article avec poids
+                value:
+                  name: "Poulet"
+                  weight:
+                    value: 1.2
+                    unit: "kg"
+              withNotes:
+                summary: Article avec notes
+                value:
+                  name: "Tomates"
+                  notes: "Bien mûres"
+      responses:
+        '200':
+          description: Article ajouté avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    options:
+      summary: Options CORS pour les articles
+      tags:
+        - CORS
+      parameters:
+        - $ref: '#/components/parameters/ListId'
+      responses:
+        '200':
+          description: Options CORS
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /lists/{listId}/items/{itemId}:
+    patch:
+      summary: Modifier un article
+      tags:
+        - Items
+      parameters:
+        - $ref: '#/components/parameters/ListId'
+        - $ref: '#/components/parameters/ItemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItemRequest'
+            examples:
+              updateQuantity:
+                summary: Modifier la quantité
+                value:
+                  quantity: 5
+              updateWeight:
+                summary: Modifier le poids
+                value:
+                  weight:
+                    value: 2.5
+                    unit: "kg"
+              markPurchased:
+                summary: Marquer comme acheté
+                value:
+                  purchased: true
+      responses:
+        '200':
+          description: Article modifié avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      summary: Supprimer un article d'une liste
+      tags:
+        - Items
+      parameters:
+        - $ref: '#/components/parameters/ListId'
+        - $ref: '#/components/parameters/ItemId'
+      responses:
+        '200':
+          description: Article supprimé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /articles:
+    get:
+      summary: Rechercher des articles ou obtenir les articles populaires
+      description: |
+        Recherche des articles avec fuzzy search ou retourne les articles les plus populaires.
+        - Avec paramètre `q` : recherche fuzzy search
+        - Sans paramètre `q` : articles les plus populaires
+      tags:
+        - Articles
+      parameters:
+        - name: q
+          in: query
+          description: Terme de recherche pour le fuzzy search
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 50
+          example: "pomm"
+        - name: query
+          in: query
+          description: Alias pour le paramètre `q`
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 50
+          example: "tomat"
+        - name: limit
+          in: query
+          description: Nombre maximum d'articles à retourner
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 10
+        - name: skip
+          in: query
+          description: Nombre d'articles à ignorer (pagination)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+      responses:
+        '200':
+          description: Liste des articles trouvés
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleSearchResponse'
+              examples:
+                searchResults:
+                  summary: Résultats de recherche
+                  value:
+                    articles:
+                      - _id: "507f1f77bcf86cd799439020"
+                        name: "Pommes"
+                        usageCount: 15
+                        score: 25.5
+                        createdAt: "2025-10-29T10:00:00.000Z"
+                        updatedAt: "2025-11-04T14:30:00.000Z"
+                      - _id: "507f1f77bcf86cd799439021"
+                        name: "Pomme de terre"
+                        usageCount: 8
+                        score: 18.8
+                        createdAt: "2025-10-30T09:15:00.000Z"
+                        updatedAt: "2025-11-03T16:45:00.000Z"
+                    query: "pomm"
+                    total: 2
+                    type: "search"
+                popularResults:
+                  summary: Articles populaires
+                  value:
+                    articles:
+                      - _id: "507f1f77bcf86cd799439022"
+                        name: "Pain"
+                        usageCount: 45
+                        createdAt: "2025-09-15T08:00:00.000Z"
+                        updatedAt: "2025-11-04T12:00:00.000Z"
+                      - _id: "507f1f77bcf86cd799439023"
+                        name: "Lait"
+                        usageCount: 38
+                        createdAt: "2025-09-20T10:30:00.000Z"
+                        updatedAt: "2025-11-04T09:15:00.000Z"
+                    total: 2
+                    type: "popular"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    options:
+      summary: Options CORS pour les articles
+      tags:
+        - CORS
+      responses:
+        '200':
+          description: Options CORS
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /articles/search:
+    get:
+      summary: Rechercher des articles avec fuzzy search
+      description: |
+        Endpoint dédié pour la recherche d'articles avec fuzzy search.
+        Utilise MongoDB Atlas Search si disponible, sinon fallback sur regex.
+      tags:
+        - Articles
+      parameters:
+        - name: q
+          in: query
+          description: Terme de recherche (obligatoire pour cette route)
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 50
+          example: "tomat"
+        - name: query
+          in: query
+          description: Alias pour le paramètre `q`
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 50
+          example: "pomm"
+        - name: limit
+          in: query
+          description: Nombre maximum d'articles à retourner
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 10
+        - name: skip
+          in: query
+          description: Nombre d'articles à ignorer (pagination)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+      responses:
+        '200':
+          description: Résultats de recherche
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleSearchResponse'
+              example:
+                articles:
+                  - _id: "507f1f77bcf86cd799439024"
+                    name: "Tomates"
+                    usageCount: 12
+                    score: 22.2
+                    createdAt: "2025-10-28T14:20:00.000Z"
+                    updatedAt: "2025-11-04T11:30:00.000Z"
+                  - _id: "507f1f77bcf86cd799439025"
+                    name: "Tomates cerises"
+                    usageCount: 6
+                    score: 16.6
+                    createdAt: "2025-10-29T16:45:00.000Z"
+                    updatedAt: "2025-11-02T13:20:00.000Z"
+                query: "tomat"
+                total: 2
+                type: "search"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /articles/popular:
+    get:
+      summary: Obtenir les articles les plus populaires
+      description: |
+        Retourne les articles triés par fréquence d'utilisation décroissante.
+        Utile pour afficher des suggestions basées sur les habitudes des utilisateurs.
+      tags:
+        - Articles
+      parameters:
+        - name: limit
+          in: query
+          description: Nombre maximum d'articles à retourner
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          example: 20
+        - name: skip
+          in: query
+          description: Nombre d'articles à ignorer (pagination)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+      responses:
+        '200':
+          description: Articles les plus populaires
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticlePopularResponse'
+              example:
+                articles:
+                  - _id: "507f1f77bcf86cd799439026"
+                    name: "Pain"
+                    usageCount: 45
+                    createdAt: "2025-09-15T08:00:00.000Z"
+                    updatedAt: "2025-11-04T12:00:00.000Z"
+                  - _id: "507f1f77bcf86cd799439027"
+                    name: "Lait"
+                    usageCount: 38
+                    createdAt: "2025-09-20T10:30:00.000Z"
+                    updatedAt: "2025-11-04T09:15:00.000Z"
+                  - _id: "507f1f77bcf86cd799439028"
+                    name: "Œufs"
+                    usageCount: 32
+                    createdAt: "2025-09-25T12:15:00.000Z"
+                    updatedAt: "2025-11-03T18:45:00.000Z"
+                total: 3
+                type: "popular"
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  parameters:
+    ListId:
+      name: listId
+      in: path
+      required: true
+      description: Identifiant unique de la liste
+      schema:
+        type: string
+        pattern: '^[0-9a-fA-F]{24}$'
+        example: "507f1f77bcf86cd799439011"
+
+    ItemId:
+      name: itemId
+      in: path
+      required: true
+      description: Identifiant unique de l'article
+      schema:
+        type: string
+        pattern: '^[0-9a-fA-F]{24}$'
+        example: "507f1f77bcf86cd799439012"
+
+  schemas:
+    List:
+      type: object
+      required:
+        - _id
+        - name
+        - createdAt
+        - updatedAt
+      properties:
+        _id:
+          type: string
+          description: Identifiant unique de la liste
+          example: "507f1f77bcf86cd799439011"
+        name:
+          type: string
+          description: Nom de la liste
+          example: "Courses Leclerc"
+        createdAt:
+          type: string
+          format: date-time
+          description: Date de création
+        updatedAt:
+          type: string
+          format: date-time
+          description: Date de dernière modification
+
+    ListWithItems:
+      allOf:
+        - $ref: '#/components/schemas/List'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Item'
+              description: Articles de la liste
+
+    Item:
+      type: object
+      required:
+        - _id
+        - listId
+        - name
+        - purchased
+        - createdAt
+        - updatedAt
+      properties:
+        _id:
+          type: string
+          description: Identifiant unique de l'article
+          example: "507f1f77bcf86cd799439012"
+        listId:
+          type: string
+          description: Identifiant de la liste parente
+          example: "507f1f77bcf86cd799439011"
+        name:
+          type: string
+          description: Nom de l'article
+          example: "Pâtes"
+        quantity:
+          type: integer
+          nullable: true
+          description: Quantité (exclusif avec weight)
+          minimum: 1
+          example: 3
+        weight:
+          type: object
+          nullable: true
+          description: Poids (exclusif avec quantity)
+          required:
+            - value
+            - unit
+          properties:
+            value:
+              type: number
+              minimum: 0
+              example: 1.2
+            unit:
+              type: string
+              enum: ["g", "kg", "lb", "oz"]
+              example: "kg"
+        notes:
+          type: string
+          nullable: true
+          description: Notes sur l'article
+          example: "Bien mûres"
+        purchased:
+          type: boolean
+          description: Indique si l'article a été acheté
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          description: Date de création
+        updatedAt:
+          type: string
+          format: date-time
+          description: Date de dernière modification
+
+    CreateListRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Nom de la liste
+          minLength: 1
+          maxLength: 100
+          example: "Courses Leclerc"
+
+    CreateItemRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Nom de l'article
+          minLength: 1
+          maxLength: 100
+          example: "Pâtes"
+        quantity:
+          type: integer
+          description: Quantité (exclusif avec weight)
+          minimum: 1
+          example: 3
+        weight:
+          type: object
+          description: Poids (exclusif avec quantity)
+          required:
+            - value
+            - unit
+          properties:
+            value:
+              type: number
+              minimum: 0
+              example: 1.2
+            unit:
+              type: string
+              enum: ["g", "kg", "lb", "oz"]
+              example: "kg"
+        notes:
+          type: string
+          description: Notes sur l'article
+          maxLength: 500
+          example: "Bien mûres"
+        purchased:
+          type: boolean
+          description: Indique si l'article a été acheté
+          default: false
+
+    UpdateItemRequest:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          nullable: true
+          description: Quantité (exclusif avec weight)
+          minimum: 1
+          example: 5
+        weight:
+          type: object
+          nullable: true
+          description: Poids (exclusif avec quantity)
+          required:
+            - value
+            - unit
+          properties:
+            value:
+              type: number
+              minimum: 0
+              example: 2.5
+            unit:
+              type: string
+              enum: ["g", "kg", "lb", "oz"]
+              example: "kg"
+        purchased:
+          type: boolean
+          description: Indique si l'article a été acheté
+          example: true
+
+    SuccessMessage:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Message de succès
+          example: "Operation completed successfully"
+
+    Article:
+      type: object
+      required:
+        - _id
+        - name
+        - usageCount
+        - createdAt
+        - updatedAt
+      properties:
+        _id:
+          type: string
+          description: Identifiant unique de l'article
+          example: "507f1f77bcf86cd799439020"
+        name:
+          type: string
+          description: Nom de l'article tel qu'ajouté par les utilisateurs
+          example: "Pommes"
+        normalizedName:
+          type: string
+          description: Nom normalisé pour la recherche (minuscules, sans accents)
+          example: "pommes"
+        usageCount:
+          type: integer
+          description: Nombre de fois que cet article a été ajouté aux listes
+          minimum: 0
+          example: 15
+        score:
+          type: number
+          description: Score de pertinence pour la recherche (optionnel)
+          example: 25.5
+        createdAt:
+          type: string
+          format: date-time
+          description: Date de première création de l'article
+        updatedAt:
+          type: string
+          format: date-time
+          description: Date de dernière utilisation de l'article
+
+    ArticleSearchResponse:
+      type: object
+      required:
+        - articles
+        - total
+        - type
+      properties:
+        articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Article'
+          description: Liste des articles trouvés
+        query:
+          type: string
+          description: Terme de recherche utilisé (présent uniquement pour type 'search')
+          example: "pomm"
+        total:
+          type: integer
+          description: Nombre total d'articles retournés
+          example: 2
+        type:
+          type: string
+          enum: ["search", "popular"]
+          description: Type de résultat (recherche ou populaire)
+          example: "search"
+
+    ArticlePopularResponse:
+      type: object
+      required:
+        - articles
+        - total
+        - type
+      properties:
+        articles:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/Article'
+              - type: object
+                properties:
+                  score:
+                    description: Non présent dans les résultats populaires
+        total:
+          type: integer
+          description: Nombre total d'articles retournés
+          example: 3
+        type:
+          type: string
+          enum: ["popular"]
+          description: Type de résultat
+          example: "popular"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Message d'erreur
+          example: "Resource not found"
+
+  responses:
+    BadRequest:
+      description: Requête invalide
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Invalid request parameters"
+
+    NotFound:
+      description: Ressource non trouvée
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Resource not found"
+
+    ServerError:
+      description: Erreur interne du serveur
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Internal server error"
+
+tags:
+  - name: Lists
+    description: Opérations sur les listes de courses
+  - name: Items
+    description: Opérations sur les articles des listes
+  - name: Articles
+    description: Recherche et suggestions d'articles intelligentes
+  - name: CORS
+    description: Gestion des requêtes CORS
