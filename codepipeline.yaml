@@ -7,7 +7,7 @@ Description: >
   - UpdatePipeline
   - BuildAndDeployFeatureStack (FeatureGitBranch only)
   - BuildAndPackage (MainGitBranch only)
-  - DeployTest (MainGitBranch only)
+  - DeployPreprod (MainGitBranch only)
   - DeployProd (MainGitBranch only)
 
   **WARNING** You will be billed for the AWS resources used if you create a stack from this template.
@@ -47,10 +47,10 @@ Parameters:
     Default: "shoplist-api-preprod"
   TestingPipelineExecutionRole:
     Type: String
-    Default: "arn:aws:iam::489767271637:role/aws-sam-cli-managed-preprod-p-PipelineExecutionRole-54UFHatU3MAq"
+    Default: "arn:aws:iam::489767271637:role/aws-sam-cli-managed-preprod-p-PipelineExecutionRole-2dCVq95G0v4S"
   TestingCloudFormationExecutionRole:
     Type: String
-    Default: "arn:aws:iam::489767271637:role/aws-sam-cli-managed-prepr-CloudFormationExecutionRo-t30RKEsp8WdP"
+    Default: "arn:aws:iam::489767271637:role/aws-sam-cli-managed-prepr-CloudFormationExecutionRo-ROKFZizvEmfZ"
   TestingArtifactBucket:
     Type: String
     Default: "cmarchive-shoplist-artifact"
@@ -68,10 +68,10 @@ Parameters:
     Default: "shoplist-api-prod"
   ProdPipelineExecutionRole:
     Type: String
-    Default: "arn:aws:iam::489767271637:role/aws-sam-cli-managed-prod-pipe-PipelineExecutionRole-iQ8xnuWX55f4"
+    Default: "arn:aws:iam::489767271637:role/aws-sam-cli-managed-prod-pipe-PipelineExecutionRole-hJtTL2LTZ9KC"
   ProdCloudFormationExecutionExeRole:
     Type: String
-    Default: "arn:aws:iam::489767271637:role/aws-sam-cli-managed-prod--CloudFormationExecutionRo-6yrhYexXvkl3"
+    Default: "arn:aws:iam::489767271637:role/aws-sam-cli-managed-prod--CloudFormationExecutionRo-zXwbaKCFy12m"
   ProdArtifactBucket:
     Type: String
     Default: "cmarchive-shoplist-artifact"
@@ -84,7 +84,7 @@ Parameters:
   # CodeStarConnectionArn and FeatureGitBranch are required for pipelines for feature branches
   CodeStarConnectionArn:
     Type: String
-    Default: "arn:aws:codestar-connections:us-east-1:489767271637:connection/d1212884-9e75-41f8-a9a7-77dd7d4407f7"
+    Default: "arn:aws:codestar-connections:us-east-1:489767271637:connection/038df99a-f955-4219-b885-fd731477a5b2"
   FeatureGitBranch:
     Type: String
     Default: ""
@@ -431,7 +431,7 @@ Resources:
                   - "codebuild:BatchGetBuilds"
                 Resource:
                   # Uncomment the line below to enable the unit-tests
-                  - !GetAtt CodeBuildProjectUnitTest.Arn
+                  # - !GetAtt CodeBuildProjectUnitTest.Arn
                   - !If
                     - IsFeatureBranchPipeline
                     - !GetAtt CodeBuildProjectBuildAndDeployFeature.Arn
@@ -570,7 +570,7 @@ Resources:
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+        Image: aws/codebuild/amazonlinux-x86_64-standard:5.0
         PrivilegedMode: true
         EnvironmentVariables:
           - Name: SAM_TEMPLATE
