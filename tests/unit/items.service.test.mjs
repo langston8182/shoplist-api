@@ -7,7 +7,12 @@ const modelMock = {
   removeItem: jest.fn()
 };
 
+const articlesMock = {
+  addOrUpdateArticle: jest.fn(async (name) => ({ _id: "mock-article", name }))
+};
+
 jest.unstable_mockModule("../../src/models/items.model.mjs", () => (modelMock));
+jest.unstable_mockModule("../../src/models/articles.model.mjs", () => (articlesMock));
 const svc = await import("../../src/services/items.service.mjs");
 
 describe("items.service - business rules", () => {
